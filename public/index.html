@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        margin: 0 auto;
+        max-width: 800px;
+        padding: 0 20px;
+      }
+
+      #darker {
+        border-color: #ccc;
+        background-color: #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Chat Messages</h2>
+    
+    <div id="boxList"></div>
+    <form id="form">
+      <input id="input" name="chat" /><button type="submit">send</button>
+    </form>
+    <form id="formroom">
+      <input id="inputroom" name="room" /><button type="submit">
+        join Room
+      </button>
+    </form>
+    <form id="formsend">
+      <input id="inputroomchat" name="roomchat" /><button type="submit">
+        chatRoom
+      </button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const name = prompt("Enter name:");
+      const form = document.getElementById("form");
+      const formroom = document.getElementById("formroom");
+      const formsend = document.getElementById("formsend");
+      const input = document.getElementById("input");
+      const inputroom = document.getElementById("inputroom");
+      const inputroomchat = document.getElementById("inputroomchat");
+      const boxList = document.getElementById("boxList");
+
+      socket.emit("user-connect", name);
+      socket.on("user-joined", (name) => {
+        if (name) {
+          boxList.innerHTML += `<div id="darker">
+                              <ul id="textbox">${name} joine in chat</ul>
+                              </div>`;
+        }
+      });
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit("send", input.value);
+          input.value = "";
+        }
+      });
+
+      socket.on("reciever", (data) => {
+        if (data) {
+          boxList.innerHTML += `<div id="darker">
+                              <ul id="textbox">${data.name} : ${data.message}</ul>
+                              </div>`;
+        }
+      });
+      let roomname;
+      formroom.addEventListener("submit", (e) => {
+        e.preventDefault();
+        roomname = inputroom.value;
+        if (inputroom.value) {
+          socket.emit("join room", inputroom.value);
+          inputroom.value = "";
+        }
+      });
+      formsend.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (inputroomchat.value) {
+          socket.emit("room chat", inputroomchat.value, roomname);
+          inputroomchat.value = "";
+        }
+      });
+
+      socket.on("msg", (chat) => {
+        console.log(chat);
+        if (chat) {
+          boxList.innerHTML += `<div id="darker">
+                              <ul id="textbox">${chat}</ul>
+                              </div>`;
+        }
+      });
+    </script>
+  </body>
+</html>
