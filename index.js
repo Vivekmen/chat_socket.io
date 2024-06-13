@@ -5,10 +5,17 @@ const { Server } = require("socket.io");
 const path = require("path");
 const server = http.createServer(app);
 const io = new Server(server);
+const morgan=require("morgan");
+const fs=require("fs");
+
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
+
+app.use(morgan("tiny",{ stream: accessLogStream }));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname + "/public/index.html"));
 });
+
 
 const users = {};
 
@@ -16,6 +23,7 @@ io.on("connection", (socket) => {
   console.log("user connected");
   socket.on("user-connect", (name) => {
     users[socket.id] = name;
+
 
     socket.broadcast.emit("user-joined", name);
   });
